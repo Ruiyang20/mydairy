@@ -1,0 +1,57 @@
+.page { min-height: 80vh; }
+
+.header {
+  padding: 48px 28px 36px;
+  text-align: center;
+  border-bottom: var(--border);
+}
+.label {
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  opacity: .38;
+  margin-bottom: 14px;
+}
+.title {
+  font-family: 'Special Elite', serif;
+  font-size: clamp(40px, 6vw, 64px);
+  letter-spacing: -.01em;
+  line-height: 1;
+  position: relative;
+  display: inline-block;
+}
+.cursor {
+  display: inline-block;
+  width: 3px;
+  height: .78em;
+  background: var(--ink);
+  vertical-align: -.05em;
+  margin-left: 4px;
+  transition: opacity 0.1s;
+}
+.sub {
+  font-size: 12px;
+  opacity: .38;
+  font-style: italic;
+  margin-top: 10px;
+}
+
+.body {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 0 28px 100px;
+}
+
+.status {
+  padding: 80px 24px;
+  text-align: center;
+  opacity: .5;
+  font-size: 14px;
+}
+.error {
+  margin: 20px 0 0;
+  padding: 12px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 13px;
+}

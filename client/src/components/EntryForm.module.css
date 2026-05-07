@@ -1,0 +1,162 @@
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Photo upload top section ── */
+.uploadSection {
+  padding: 28px 0 24px;
+  border-bottom: var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.uploadCircle {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: var(--border);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  gap: 2px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.uploadCircle:hover { background: rgba(44, 24, 16, 0.06); }
+
+.uploadArr { font-size: 20px; line-height: 1; opacity: .55; }
+.uploadCircleLabel {
+  font-family: 'Courier Prime', monospace;
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  opacity: .38;
+  line-height: 1;
+}
+.uploadHint {
+  font-size: 11px;
+  opacity: .35;
+  font-style: italic;
+  letter-spacing: .03em;
+}
+
+/* preview replaces the circle */
+.previewWrap {
+  width: 100%;
+  position: relative;
+}
+.preview {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+.removeImg {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  font-family: 'Courier Prime', monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+.imgName {
+  font-size: 11px;
+  opacity: .3;
+  font-style: italic;
+  margin-top: 6px;
+}
+.imgError {
+  font-size: 12px;
+  color: var(--accent);
+  opacity: .9;
+}
+
+/* ── Fields ── */
+.row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  padding: 18px 0;
+  border-bottom: var(--border);
+  gap: 7px;
+}
+.fieldRight {
+  border-left: var(--border);
+  padding-left: 24px;
+}
+
+.label {
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  opacity: .38;
+  padding: 0 2px;
+}
+
+/* transparent warm-tinted inputs — no white fill */
+.input {
+  background: rgba(44, 24, 16, 0.055);
+  border: none;
+  outline: none;
+  font-family: 'Courier Prime', monospace;
+  font-size: 15px;
+  color: var(--ink);
+  width: 100%;
+  padding: 9px 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 0;
+  resize: none;
+}
+.input::placeholder { opacity: .32; }
+.input:focus { background: rgba(44, 24, 16, 0.09); }
+.input[type="date"],
+.input[type="select"] { cursor: pointer; }
+.tall { min-height: 148px; line-height: 1.9; }
+
+.charCount {
+  font-size: 10px;
+  opacity: .28;
+  text-align: right;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.submit {
+  margin-top: 48px;
+  width: 100%;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  font-family: 'Special Elite', serif;
+  font-size: 14px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 15px;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.submit:hover:not(:disabled) { opacity: .85; }
+.submit:disabled { opacity: .4; cursor: not-allowed; }
+
+@media (max-width: 520px) {
+  .row { grid-template-columns: 1fr; }
+  .fieldRight { border-left: none; border-top: var(--border); padding-left: 0; }
+}
