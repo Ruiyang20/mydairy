@@ -11,7 +11,11 @@
   font-size: 13px;
   letter-spacing: 0.03em;
 }
-.left  {}
+.left  {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .center { text-align: center; font-style: italic; white-space: nowrap; }
 .right  {
   text-align: right;
@@ -23,6 +27,45 @@
 .nav a { color: var(--ink); text-decoration: none; }
 .nav a:hover { text-decoration: underline; }
 .divider { opacity: .3; }
+.learningMenu {
+  position: relative;
+  display: inline-flex;
+}
+.menuTrigger {
+  background: none;
+  border: none;
+  color: var(--ink);
+  font-size: 13px;
+  letter-spacing: .03em;
+  padding: 0;
+}
+.menuTrigger:hover { text-decoration: underline; }
+.menuPanel {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 150px;
+  display: none;
+  flex-direction: column;
+  border: var(--border);
+  background: var(--bg);
+  box-shadow: 4px 4px 0 rgba(44, 24, 16, .14);
+}
+.learningMenu:hover .menuPanel,
+.learningMenu:focus-within .menuPanel {
+  display: flex;
+}
+.menuPanel a {
+  padding: 11px 14px;
+  border-bottom: var(--border);
+  white-space: nowrap;
+  font-size: 12px;
+}
+.menuPanel a:last-child { border-bottom: none; }
+.menuPanel a:hover {
+  background: var(--hover-bg);
+  text-decoration: none;
+}
 .logoutBtn {
   background: none;
   border: none;
@@ -34,3 +77,14 @@
   padding: 0;
 }
 .logoutBtn:hover { color: var(--accent); }
+
+@media (max-width: 620px) {
+  .nav {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    position: static;
+  }
+  .center { order: -1; }
+  .left,
+  .right { justify-content: center; }
+}

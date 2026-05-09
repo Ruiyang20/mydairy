@@ -34,7 +34,7 @@ export default function App() {
 
       {/* FAB — only when logged in */}
       {authed && (
-        <a href="/write" style={fabStyle}>+ New Entry</a>
+        <a href="/write" style={fabStyle}>+ 记事本</a>
       )}
     </>
   );
