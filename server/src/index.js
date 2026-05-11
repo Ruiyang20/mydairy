@@ -5,8 +5,8 @@ const path    = require('path');
 
 const connectDB      = require('./config/db');
 const entriesRouter  = require('./routes/entries');
+const wingsRouter    = require('./routes/wings');
 const authRouter     = require('./routes/auth');
-const authMiddleware = require('./middleware/auth');
 
 const app  = express();
 const PORT = process.env.PORT || 5001;
@@ -28,7 +28,8 @@ app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
 // ── API routes ────────────────────────────────────────────────────────────────
 app.use('/api/auth',    authRouter);
-app.use('/api/entries', authMiddleware, entriesRouter);  // 🔒 all entry routes protected
+app.use('/api/entries', entriesRouter);
+app.use('/api/wings',   wingsRouter);
 
 app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 

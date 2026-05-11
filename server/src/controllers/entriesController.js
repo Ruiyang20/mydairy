@@ -40,12 +40,13 @@ const getEntry = async (req, res) => {
 // POST /api/entries  — create
 const createEntry = async (req, res) => {
   try {
-    const { title, date, mood, highlights, reflection, image } = req.body;
+    const { title, date, mood, room, highlights, reflection, image } = req.body;
 
     const entry = new Entry({
       title,
       date: new Date(date),
       mood,
+      room: room || null,
       highlights: Array.isArray(highlights) ? highlights : [],
       reflection,
       image: image || null,
@@ -67,7 +68,7 @@ const updateEntry = async (req, res) => {
   if (!isValidId(req.params.id))
     return res.status(400).json({ message: 'Invalid entry id' });
   try {
-    const { title, date, mood, highlights, reflection, image } = req.body;
+    const { title, date, mood, room, highlights, reflection, image } = req.body;
 
     const updated = await Entry.findByIdAndUpdate(
       req.params.id,
@@ -75,6 +76,7 @@ const updateEntry = async (req, res) => {
         title,
         date: date ? new Date(date) : undefined,
         mood,
+        room: room !== undefined ? room : undefined,
         highlights: Array.isArray(highlights) ? highlights : [],
         reflection,
         image: image !== undefined ? image : undefined,

@@ -17,6 +17,12 @@ const entrySchema = new mongoose.Schema(
       enum: ['happy', 'melancholic', 'excited', 'grateful', 'anxious', 'peaceful', 'nostalgic'],
       default: 'peaceful',
     },
+    room: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: [80, 'Room cannot exceed 80 characters'],
+    },
     highlights: {
       type: [String],
       default: [],

@@ -4,13 +4,13 @@ import { resizeImage } from '../utils/imageResize';
 import styles from './EntryForm.module.css';
 
 const MOODS = [
-  { value: 'happy',       label: 'Happy ☀️' },
-  { value: 'melancholic', label: 'Melancholic 🌧' },
-  { value: 'excited',     label: 'Excited ⚡' },
-  { value: 'grateful',    label: 'Grateful 🌿' },
-  { value: 'anxious',     label: 'Anxious 🌀' },
-  { value: 'peaceful',    label: 'Peaceful 🕊' },
-  { value: 'nostalgic',   label: 'Nostalgic 🍂' },
+  { value: 'happy',       label: 'Happy ' },
+  { value: 'melancholic', label: 'Melancholic ' },
+  { value: 'excited',     label: 'Excited ' },
+  { value: 'grateful',    label: 'Grateful ' },
+  { value: 'anxious',     label: 'Anxious ' },
+  { value: 'peaceful',    label: 'Peaceful ' },
+  { value: 'nostalgic',   label: 'Nostalgic ' },
 ];
 
 export default function EntryForm({ initial = {}, onSubmit, loading }) {
