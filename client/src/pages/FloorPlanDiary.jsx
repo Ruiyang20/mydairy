@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { createEntry, createWing, deleteEntry, fetchWings, updateWing } from '../utils/api';
+import { createEntry, createWing, deleteEntry, fetchWings, updateEntry, updateWing } from '../utils/api';
 import { useEntries } from '../hooks/useEntries';
 import { todayInputValue } from '../utils/date';
 import { resizeImage } from '../utils/imageResize';
@@ -38,6 +38,13 @@ const formatDate = (value) => {
   return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const dateInputValue = (value) => {
+  if (!value) return todayInputValue();
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return todayInputValue();
+  return date.toISOString().slice(0, 10);
+};
+
 const toMuseumEntry = (entry, rooms = DEFAULT_ROOMS) => {
   const highlights = Array.isArray(entry.highlights) ? entry.highlights : [];
   return {
@@ -70,6 +77,7 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
   const [hoverRoom, setHoverRoom] = useState(null);
   const [query, setQuery] = useState('');
   const [showWingEditor, setShowWingEditor] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState(null);
   const [write, setWrite] = useState({
     title: '',
     date: todayInputValue(),
@@ -171,6 +179,40 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
     setWrite((prev) => ({ ...prev, room: room.id, mood: room.moods[0] || prev.mood || 'peaceful' }));
   };
 
+  const emptyWriteForm = () => ({
+    title: '',
+    date: todayInputValue(),
+    mood: 'peaceful',
+    room: roomForMood('peaceful', rooms),
+    highlights: '',
+    reflection: '',
+    image: null,
+  });
+
+  const startNewEntry = () => {
+    setEditingEntryId(null);
+    setFormError('');
+    setWrite(emptyWriteForm());
+    setScreen('write');
+  };
+
+  const startEditEntry = (entry) => {
+    if (!entry) return;
+    const source = entry.source || {};
+    setEditingEntryId(entry.id);
+    setFormError('');
+    setWrite({
+      title: source.title || entry.title || '',
+      date: dateInputValue(source.date),
+      mood: source.mood || entry.mood || 'peaceful',
+      room: source.room || entry.room || roomForMood(source.mood || entry.mood, rooms),
+      highlights: Array.isArray(source.highlights) ? source.highlights.join('\n') : entry.tags.join('\n'),
+      reflection: source.reflection || entry.body || '',
+      image: source.image || entry.image || null,
+    });
+    setScreen('write');
+  };
+
   const startEditWing = (room) => {
     setEditingWing(room);
     setWingForm({ name: room.name, tagline: room.tagline || '' });
@@ -220,7 +262,7 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
     setSaving(true);
     setFormError('');
     try {
-      const created = await createEntry({
+      const payload = {
         title: write.title.trim(),
         date: write.date,
         mood: write.mood,
@@ -228,11 +270,15 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
         highlights: write.highlights.split('\n').map((s) => s.trim()).filter(Boolean),
         reflection: write.reflection.trim(),
         image: write.image,
-      });
+      };
+      const saved = editingEntryId
+        ? await updateEntry(editingEntryId, payload)
+        : await createEntry(payload);
       await reload();
-      setWrite({ title: '', date: todayInputValue(), mood: 'peaceful', room: roomForMood('peaceful', rooms), highlights: '', reflection: '', image: null });
-      setEntryId(created._id);
-      setRoomId(created.room || roomForMood(created.mood, rooms));
+      setWrite(emptyWriteForm());
+      setEditingEntryId(null);
+      setEntryId(saved._id || editingEntryId);
+      setRoomId(saved.room || roomForMood(saved.mood, rooms));
       setScreen('entry');
     } catch (err) {
       setFormError(err.response?.data?.message || err.message);
@@ -271,7 +317,7 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
           ['search','Search'],
         ].map(([key, label]) => (
           <button key={key} className="fp-btn fp-mono"
-            onClick={() => setScreen(key)}
+            onClick={() => key === 'write' ? startNewEntry() : setScreen(key)}
             style={{
               padding:'8px 14px', border:`1px solid ${screen===key ? ink : 'transparent'}`,
               color: screen===key ? ink : mute,
@@ -604,7 +650,7 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
             {list.length === 0 && (
               <div style={{alignSelf:'center', color: mute}}>
                 <div className="fp-disp" style={{fontSize:22, fontStyle:'italic'}}>This wing is empty.</div>
-                <button className="fp-btn fp-chip" onClick={() => setScreen('write')} style={{marginTop:12}}>Acquire first work</button>
+                <button className="fp-btn fp-chip" onClick={startNewEntry} style={{marginTop:12}}>Acquire first work</button>
               </div>
             )}
           </div>
@@ -621,7 +667,7 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
         <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom: 28, gap: 18}}>
           <button className="fp-btn fp-mono" style={{color:mute}} onClick={() => setScreen('room')}>Back to Wing {room.no} - {room.name}</button>
           <div style={{display:'flex', gap:12}}>
-            <button className="fp-btn fp-chip" onClick={() => setScreen('write')}>New</button>
+            <button className="fp-btn fp-chip" onClick={() => startEditEntry(activeEntry)}>Edit</button>
             <button className="fp-btn fp-chip" onClick={removeActiveEntry}>Delete</button>
           </div>
         </div>
@@ -674,7 +720,9 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
   const Write = () => (
     <form className="fp-fade fp-write-grid" onSubmit={saveEntry} style={{display:'grid', gridTemplateColumns:'1fr 320px', minHeight:'calc(100vh - 57px)'}}>
       <div style={{padding:'40px 56px', background: paper}}>
-        <div className="fp-mono" style={{color: tan, marginBottom:14}}>Acquire - new work</div>
+        <div className="fp-mono" style={{color: tan, marginBottom:14}}>
+          {editingEntryId ? 'Edit - existing work' : 'Acquire - new work'}
+        </div>
         <input className="fp-input fp-disp" value={write.title} onChange={(e) => setWrite({...write, title:e.target.value})}
           placeholder="A working title for today's piece" required maxLength={200}
           style={{fontSize:40, fontStyle:'italic', paddingBottom:16}}/>
@@ -728,12 +776,18 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
           </label>
         </div>
         <label className="fp-btn fp-chip" style={{justifyContent:'center', width:'100%', marginBottom:12}}>
-          Add photo
+          {write.image ? 'Replace photo' : 'Add photo'}
           <input type="file" accept="image/*" style={{display:'none'}} onChange={(e) => handleImage(e.target.files?.[0])}/>
         </label>
         {write.image && <img src={write.image} alt="Preview" style={{width:'100%', aspectRatio:'4 / 5', objectFit:'cover', border:`1px solid ${hair}`, marginBottom:12}}/>}
+        {write.image && (
+          <button className="fp-btn fp-chip" type="button" onClick={() => setWrite((prev) => ({ ...prev, image: null }))}
+            style={{justifyContent:'center', width:'100%', marginBottom:12}}>
+            Remove photo
+          </button>
+        )}
         <button className="fp-btn" disabled={saving} style={{padding:'12px 22px', background: ink, color: paper, fontFamily: fonts.mono, textTransform:'uppercase', letterSpacing:'0.1em', fontSize:11, width:'100%'}}>
-          {saving ? 'Saving...' : 'Mount on wall'}
+          {saving ? 'Saving...' : editingEntryId ? 'Save changes' : 'Mount on wall'}
         </button>
       </aside>
     </form>
@@ -741,10 +795,40 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
 
   const Curate = () => {
     const [picked, setPicked] = useState(museumEntries[0]?.id || null);
+    const [movingRoom, setMovingRoom] = useState('');
+    const [curateError, setCurateError] = useState('');
     const pickedEntry = museumEntries.find((entry) => entry.id === picked) || museumEntries[0];
+
+    const moveEntryToRoom = async (room) => {
+      if (!pickedEntry || pickedEntry.room === room.id || movingRoom) return;
+      setMovingRoom(room.id);
+      setCurateError('');
+      try {
+        await updateEntry(pickedEntry.id, { room: room.id });
+        await reload();
+        setPicked(pickedEntry.id);
+      } catch (err) {
+        setCurateError(err.response?.data?.message || err.message || 'Could not move this entry.');
+      } finally {
+        setMovingRoom('');
+      }
+    };
+
+    if (!pickedEntry) {
+      return (
+        <div className="fp-page" style={{padding:'40px 64px 64px'}}>
+          <div className="fp-mono" style={{color: tan, marginBottom:14}}>Curate - move works between wings</div>
+          <div style={{border:`1px solid ${hair}`, padding:28, maxWidth:460}}>
+            <div className="fp-disp" style={{fontSize:24, fontStyle:'italic'}}>No works to re-hang yet.</div>
+            <button className="fp-btn fp-chip" onClick={startNewEntry} style={{marginTop:14}}>Acquire first work</button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="fp-fade fp-page" style={{padding:'40px 64px 64px'}}>
-        <div className="fp-mono" style={{color: tan, marginBottom:14}}>Curate - view mood rooms</div>
+        <div className="fp-mono" style={{color: tan, marginBottom:14}}>Curate - move works between wings, open new wings</div>
         <h1 className="fp-disp" style={{fontSize:54, lineHeight:1, margin:'0 0 36px'}}>Re-hang the <em style={{color: tan, fontWeight:400}}>collection.</em></h1>
         <div className="fp-curate-grid" style={{display:'grid', gridTemplateColumns:'1fr 1.2fr', gap:56}}>
           <div>
@@ -753,7 +837,13 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
               {museumEntries.map((entry) => (
                 <button key={entry.id} className="fp-btn" onClick={() => setPicked(entry.id)}
                   style={{display:'grid', gridTemplateColumns:'40px 1fr auto', gap:12, alignItems:'center', padding:'12px 14px', background:picked===entry.id ? soft : paper, textAlign:'left'}}>
-                  <div style={{width:36, height:46, background:`linear-gradient(160deg, color-mix(in oklab, oklch(0.7 0.10 ${entry.moodHue}) 50%, ${paper}), ${paper})`, boxShadow:`0 0 0 1px ${hair}`}}/>
+                  <div style={{
+                    width:36, height:46,
+                    background: entry.image
+                      ? `center / cover url("${entry.image}")`
+                      : `linear-gradient(160deg, color-mix(in oklab, oklch(0.7 0.10 ${entry.moodHue}) 50%, ${paper}), ${paper})`,
+                    boxShadow:`0 0 0 1px ${hair}`,
+                  }}/>
                   <div>
                     <div className="fp-disp" style={{fontSize:15, fontStyle:'italic'}}>{entry.title}</div>
                     <div className="fp-mono" style={{color: mute, marginTop:2}}>{entry.date} - {entry.mood}</div>
@@ -764,24 +854,28 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
             </div>
           </div>
           <div>
-            <div className="fp-mono" style={{color: mute, marginBottom:12}}>Assigned wing</div>
+            <div className="fp-mono" style={{color: mute, marginBottom:12}}>Move to wing</div>
             {pickedEntry && (
               <div style={{border:`1px solid ${hair}`, padding:24, marginBottom:14, background:soft}}>
                 <div className="fp-mono" style={{color:tan, marginBottom:8}}>Currently displaying:</div>
                 <div className="fp-disp" style={{fontSize:22, fontStyle:'italic', marginBottom:4}}>{pickedEntry.title}</div>
-                <div className="fp-mono" style={{color: mute}}>Mood based: Wing {rooms.find((r) => r.id === pickedEntry.room)?.no} - {rooms.find((r) => r.id === pickedEntry.room)?.name}</div>
+                <div className="fp-mono" style={{color: mute}}>Hangs in: Wing {rooms.find((r) => r.id === pickedEntry.room)?.no} - {rooms.find((r) => r.id === pickedEntry.room)?.name}</div>
               </div>
             )}
+            {curateError && <p style={{color: ink, margin:'0 0 14px'}}>{curateError}</p>}
             <div style={{display:'grid', gap:8}}>
               {rooms.map((room) => (
-                <button key={room.id} className="fp-btn" onClick={() => openRoom(room.id)}
+                <button key={room.id} className="fp-btn" type="button" disabled={Boolean(movingRoom)}
+                  onClick={() => moveEntryToRoom(room)}
                   style={{display:'grid', gridTemplateColumns:'56px 1fr auto', gap:18, alignItems:'center', padding:'16px 18px', border:`1px solid ${pickedEntry?.room===room.id ? ink : hair}`, background:pickedEntry?.room===room.id ? soft : paper, textAlign:'left'}}>
                   <div className="fp-disp" style={{fontSize:26, color: tan, fontStyle:'italic'}}>{room.no}</div>
                   <div>
                     <div className="fp-disp" style={{fontSize:18}}>{room.name}</div>
                     <div className="fp-mono" style={{color: mute, marginTop:2}}>{room.tagline}</div>
                   </div>
-                  <div className="fp-mono" style={{color: pickedEntry?.room===room.id ? ink : mute}}>{pickedEntry?.room===room.id ? 'here' : 'view'}</div>
+                  <div className="fp-mono" style={{color: pickedEntry?.room===room.id ? ink : mute}}>
+                    {movingRoom === room.id ? 'moving' : pickedEntry?.room===room.id ? 'here' : 'move'}
+                  </div>
                 </button>
               ))}
             </div>
@@ -808,7 +902,7 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
         {ordered.length === 0 ? (
           <div style={{border:`1px solid ${hair}`, padding:28, maxWidth:460}}>
             <div className="fp-disp" style={{fontSize:24, fontStyle:'italic'}}>No entries yet.</div>
-            <button className="fp-btn fp-chip" onClick={() => setScreen('write')} style={{marginTop:14}}>Acquire first work</button>
+            <button className="fp-btn fp-chip" onClick={startNewEntry} style={{marginTop:14}}>Acquire first work</button>
           </div>
         ) : (
           <div style={{position:'relative', minWidth: Math.max(820, ordered.length * 230), padding:'36px 10px 46px'}}>
@@ -912,7 +1006,7 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
       {screen === 'write' && Write()}
       {screen === 'curate' && <Curate/>}
       {screen === 'search' && <Search/>}
-      {showWingEditor && <WingEditor/>}
+      {showWingEditor && WingEditor()}
     </div>
   );
 }

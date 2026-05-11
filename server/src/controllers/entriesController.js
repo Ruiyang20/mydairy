@@ -69,18 +69,18 @@ const updateEntry = async (req, res) => {
     return res.status(400).json({ message: 'Invalid entry id' });
   try {
     const { title, date, mood, room, highlights, reflection, image } = req.body;
+    const changes = {};
+    if (title !== undefined) changes.title = title;
+    if (date !== undefined) changes.date = new Date(date);
+    if (mood !== undefined) changes.mood = mood;
+    if (room !== undefined) changes.room = room;
+    if (highlights !== undefined) changes.highlights = Array.isArray(highlights) ? highlights : [];
+    if (reflection !== undefined) changes.reflection = reflection;
+    if (image !== undefined) changes.image = image;
 
     const updated = await Entry.findByIdAndUpdate(
       req.params.id,
-      {
-        title,
-        date: date ? new Date(date) : undefined,
-        mood,
-        room: room !== undefined ? room : undefined,
-        highlights: Array.isArray(highlights) ? highlights : [],
-        reflection,
-        image: image !== undefined ? image : undefined,
-      },
+      changes,
       { new: true, runValidators: true }
     );
 
