@@ -176,7 +176,7 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
   };
 
   const mountInRoom = (room) => {
-    setWrite((prev) => ({ ...prev, room: room.id, mood: room.moods[0] || prev.mood || 'peaceful' }));
+    setWrite((prev) => ({ ...prev, room: room.id }));
   };
 
   const emptyWriteForm = () => ({
@@ -621,9 +621,12 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
       <div className="fp-fade" style={{minHeight:'calc(100vh - 57px)', display:'flex', flexDirection:'column'}}>
         <div style={{padding:'24px 36px 20px', borderBottom:`1px solid ${hair}`, display:'grid', gridTemplateColumns:'auto 1fr', gap: 28, alignItems:'center'}}>
           <button className="fp-btn fp-mono" onClick={() => setScreen('lobby')} style={{color:mute}}>Back to floor plan</button>
-          <div>
+          <div style={{display:'grid', gridTemplateColumns:'1fr minmax(220px, 420px)', gap:24, alignItems:'end'}}>
             <div className="fp-mono" style={{color: tan}}>Wing {activeRoom.no} - {list.length} works on view</div>
             <h1 className="fp-disp" style={{fontSize: 38, margin:0}}>{activeRoom.name}</h1>
+            <div className="fp-disp" style={{gridColumn:'2', gridRow:'1 / span 2', justifySelf:'end', textAlign:'right', fontSize:22, lineHeight:1.25, fontStyle:'italic', color: mute}}>
+              "{activeRoom.tagline}"
+            </div>
           </div>
         </div>
         <div style={{flex: 1, position:'relative', overflowX:'auto', background:`linear-gradient(180deg, ${paper} 0 55%, ${soft} 55% 100%)`}}>
@@ -749,9 +752,7 @@ export default function FloorPlanDiary({ onLogout, initialScreen = 'landing', in
                 <span className="fp-disp" style={{fontSize:19, color: tan, fontStyle:'italic'}}>{room.no}</span>
                 <span>
                   <span className="fp-disp" style={{fontSize:16, fontStyle:'italic'}}>{room.name}</span>
-                  <span className="fp-mono" style={{display:'block', color: mute, marginTop:2}}>
-                    {room.moods.join(' / ')}
-                  </span>
+                  <span className="fp-mono" style={{display:'block', color: mute, marginTop:2}}>Wing {room.no}</span>
                 </span>
                 <span className="fp-mono" style={{color: selected ? ink : mute}}>{selected ? 'here' : 'mount'}</span>
               </button>
